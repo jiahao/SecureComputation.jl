@@ -30,6 +30,12 @@ isalignedindexes(a::DistributedShares, b::DistributedShares) =
     a.idxs == b.idxs
 
 ##############################################################################
+# ARITHMETIC ACCORDING TO THE BGW88 PROTOCOL
+# BGW88 defines + and *
+# -, \, /, inv are the "obvious" inverse operations
+##############################################################################
+
+##############################################################################
 # Addition
 ##############################################################################
 
@@ -159,6 +165,8 @@ function randomize!(x::DistributedShares, t::Int)
     DistributedShares(x.idxs, vals)
 end
 
+#NOTE: Notation is transposed relative to the BGW88 paper,
+# which operates on row vectors
 function reducedegree(S, nodes, t::Integer)
     Te = eltype(S)
     n = length(S)
