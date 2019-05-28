@@ -1,0 +1,4 @@
+name = "SecureComputation"
+uuid = "1a59a1ac-80e1-11e9-1c65-07cde08caba7"
+authors = ["Jiahao Chen <1732+jiahao@users.noreply.github.com>"]
+version = "0.1.0"
