@@ -82,20 +82,3 @@ shamir(rng::AbstractRNG, t::Int, n::Int, secret::SD) where SD <: SecretDomain =
 
 unshamir(x::DistributedShares) = lagrangeinterp0(x.idxs, x.vals)
 
-#Protocol Pseudorandom Secret-Sharing (PRSS)
-
-using .GaloisFields, Test
-let
-    #Example from
-    #https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing#Solution
-    F = GF{BigInt,1613}
-
-    secret = F(1234)
-    idxs = 1:6
-    xs = F[1494, 329, 965, 176, 1188, 775]
-
-    @test shamir(6, secret, F[166, 94]).vals == xs
-    @test unshamir(DistributedShares(idxs, xs)) == secret
-
-    @test unshamir(shamir(6, secret)) == secret
-end

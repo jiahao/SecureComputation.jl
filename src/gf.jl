@@ -48,22 +48,3 @@ Random.rand(rng::AbstractRNG, ::Random.SamplerType{GF{T,q}}) where {T,q} =
     GF(T, q, rand(rng, 0:q-1))
 
 end #module
-
-using .GaloisFields, Test
-let
-    F = GF{Int,1613}
-
-    @test F(1) + F(1) == F(2)
-    @test F(1) - F(1) == F(0)
-    @test F(1) * F(1) == F(1)
-    @test F(1) / F(1) == F(1)
-    @test inv(F(1)) == F(1)
-
-    @test F(1) + 1 == F(2)
-    @test 1 + F(1) == F(2)
-
-
-    @test typeof(rand(F)) == F
-    @test typeof(rand(F, 5)) == Vector{F}
-end
-
