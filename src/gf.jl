@@ -34,20 +34,3 @@ promote_rule(::Type{T}, ::Type{GF{q}}) where q where T<:Integer = GF{q}
 rand(rng::AbstractRNG, ::Random.SamplerType{GF{q}}) where q =
     GF{q}(rand(rng, 0:q-1))
 end #module
-
-using .GaloisFields, Test
-let
-    F = GF{1613}
-
-    @test F(1) + F(1) == F(2)
-    @test F(1) - F(1) == F(0)
-    @test F(1) * F(1) == F(1)
-    @test F(1) / F(1) == F(1)
-    @test inv(F(1)) == F(1)
-
-    @test F(1) + 1 == F(2)
-    @test 1 + F(1) == F(2)
-
-    @test typeof(rand(F, 5)) == Vector{F}
-end
-

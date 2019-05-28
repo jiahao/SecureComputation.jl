@@ -5,7 +5,12 @@ GLOBAL_RNG = Random.GLOBAL_RNG
 
 include("cpurng.jl")
 include("gf.jl")
+
+using .GaloisFields
+
 include("shamir.jl")
+
+export GF, DistributedShares, shamir, unshamir
 
 # Arithmetic on distributed shares
 
@@ -180,28 +185,6 @@ function reducedegree(S, nodes, t::Integer)
     B * K
 end
 
-#Test
-using Polynomials
-let
-    SD = GF{982451653}
-    #Number of interpolating points
-    n = 11
-    #Degree
-    t = 4
-
-
-    Pa = Poly(SD.(1:5))
-    Pb = Poly(SD[6,7,8,9,1])
-    #Truncate the product to degree t
-    Pc = Poly((Pa * Pb).a[1:t+1])
-
-    an = [polyval(Pa, i) for i=1:n]
-    bn = [polyval(Pb, i) for i=1:n]
-    cn = [polyval(Pc, i) for i=1:n]
-
-    @test reducedegree(an .* bn, SD.(1:n), t) == cn
-end
-
 *(a::T, b::T) where T <: DistributedShares =
     *(a::T, b::T, Val(isalignedindexes(a, b)))
 
@@ -260,56 +243,5 @@ inv(a::DistributedShares) = DistributedShares(a.idxs, inv.(a.vals))
 \(a::T, b::T) where T <: DistributedShares = inv(a) * b
 
 ##############################################################################
-using .Test
-
-let
-    SD = GF{982451653}
-    secret1 = 12345
-    secret2 = 54321
-
-    n = 16
-    t = 6
-
-    x = shamir(n, t, SD(secret1))
-    y = shamir(n, t, SD(secret2))
-
-    @test unshamir(x+y) == SD(secret1+secret2)
-    @test unshamir(x-x) == SD(0)
-    @test unshamir(x+(-x)) == SD(0)
-    @test unshamir(x*y) == SD(secret1*secret2)
-    @test unshamir(x/x) == SD(1)
-    @test unshamir(x\x) == SD(1)
-end
-
-let
-    SD = GF{982451653}
-    n = 4
-    t = 6
-    x = rand(SD, n, n)
-    y = rand(SD, n, n)
-    z = x + y
-
-    sx = shamir.(t, t, x)
-    sy = shamir.(t, t, y)
-    sz = sx + sy
-
-    @test unshamir.(sz) == z
-end
-
-let
-    SD = GF{982451653}
-    n = 1
-    t = 3
-    x = rand(SD, n, n)
-    y = rand(SD, n, n)
-    z = x * y
-
-    sx = shamir.(2t+1, t, x)
-    sy = shamir.(2t+1, t, y)
-    sz = sx * sy
-
-    @test unshamir.(sz) == z
-end
 
 end # module
-
