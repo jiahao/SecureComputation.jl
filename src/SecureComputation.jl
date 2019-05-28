@@ -1,12 +1,15 @@
 module SecureComputation
 
+using Random
+GLOBAL_RNG = Random.GLOBAL_RNG
+
 include("cpurng.jl")
 include("gf.jl")
 include("shamir.jl")
 
 # Arithmetic on distributed shares
 
-import Base: +, *, eltype, zero, oneunit
+import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type
 
 oneunit(::Type{GF{T}}) where T = GF{T}(1)
 
@@ -14,6 +17,13 @@ zero(x::DistributedShares) = DistributedShares(x.idxs, x.vals*0)
 zero(x::Type{DistributedShares{T,S,R}}) where {T,S,R} = DistributedShares(1:0, T[])
 
 eltype(::Type{S}) where S <: DistributedShares = S.parameters[1]
+
+function promote_type(::Type{DistributedShares{Ta, Ua, Va}}, b::Type{DistributedShares{Tb, Ub, Vb}}) where {Ta, Tb, Ua, Ub, Va, Vb}
+    T = promote_type(Ta, Tb)
+    U = promote_type(Ua, Ub)
+    V = promote_type(Va, Vb)
+    DistributedShares{T,U,V}
+end
 
 "Are indexes of shares aligned?"
 isalignedindexes(a::DistributedShares, b::DistributedShares) =
@@ -49,6 +59,13 @@ function +(a::T, b::T, ::Val{false}) where T <: DistributedShares
     end
     DistributedShares(idxs, vals)
 end
+
+##############################################################################
+# Subtraction
+##############################################################################
+
+-(a::T) where T <: DistributedShares = DistributedShares(a.idxs, -a.vals)
+-(a::T, b::T) where T <: DistributedShares = a + (-b)
 
 ##############################################################################
 # Multiplication
@@ -221,12 +238,18 @@ function *(a::T, b::T, ::Val{true}) where T <: DistributedShares
     randomize!(h, t)
 end
 
-function Base.promote_type(::Type{DistributedShares{Ta, Ua, Va}}, b::Type{DistributedShares{Tb, Ub, Vb}}) where {Ta, Tb, Ua, Ub, Va, Vb}
-    T = promote_type(Ta, Tb)
-    U = promote_type(Ua, Ub)
-    V = promote_type(Va, Vb)
-    DistributedShares{T,U,V}
-end
+##############################################################################
+# Inversion
+##############################################################################
+
+inv(a::DistributedShares) = DistributedShares(a.idxs, inv.(a.vals))
+
+##############################################################################
+# Division
+##############################################################################
+
+/(a::T, b::T) where T <: DistributedShares = a * inv(b)
+\(a::T, b::T) where T <: DistributedShares = inv(a) * b
 
 ##############################################################################
 using .Test
@@ -243,7 +266,11 @@ let
     y = shamir(n, t, SD(secret2))
 
     @test unshamir(x+y) == SD(secret1+secret2)
+    @test unshamir(x-x) == SD(0)
+    @test unshamir(x+(-x)) == SD(0)
     @test unshamir(x*y) == SD(secret1*secret2)
+    @test unshamir(x/x) == SD(1)
+    @test unshamir(x\x) == SD(1)
 end
 
 let

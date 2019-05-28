@@ -18,6 +18,7 @@ GF(q, a) = GF{q}(a % q)
 
 +(a::GF{q}, b::GF{q}) where q = GF{q}(mod(a.val+b.val, q))
 -(a::GF{q}, b::GF{q}) where q = GF{q}(mod(a.val-b.val, q))
+-(a::GF{q}) where q = GF{q}(mod(-a.val, q))
 *(a::GF{q}, b::GF{q}) where q = GF{q}(mod(a.val*b.val, q))
 /(a::GF{q}, b::GF{q}) where q = a * inv(b)
 

@@ -69,9 +69,13 @@ function shamir(t::Int, s::SD, rs) where SD <: SecretDomain
 end
 
 #Default degree of sharing is the maximal degree which permits multiplication
+shamir(t::Int, secret::SD) where SD <: SecretDomain =
+    shamir(GLOBAL_RNG, t::Int, secret::SD)
 shamir(rng::AbstractRNG, t::Int, secret::SD) where SD <: SecretDomain =
-    shamir(t, (t-1)÷2, secret)
+    shamir(rng, t, (t-1)÷2, secret)
 
+shamir(t::Int, n::Int, secret::SD) where SD <: SecretDomain =
+    shamir(GLOBAL_RNG, t::Int, n::Int, secret::SD)
 shamir(rng::AbstractRNG, t::Int, n::Int, secret::SD) where SD <: SecretDomain =
     shamir(t, secret, rand(rng, SD, n-1))
 
