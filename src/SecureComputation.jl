@@ -1,17 +1,23 @@
 module SecureComputation
 
+export shamir, unshamir, GF, RdRand, RdSeed
+
 using Random
 GLOBAL_RNG = Random.GLOBAL_RNG
 
 include("cpurng.jl")
+using .CPURNGs
+
 include("gf.jl")
 include("shamir.jl")
 
-# Arithmetic on distributed shares
+import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type, getindex
 
-import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type
+#Array operations on DistributedShares
 
-oneunit(::Type{GF{T}}) where T = GF{T}(1)
+getindex(x::DistributedShares, inds) = DistributedShares(inds, x.vals[inds])
+
+#Arihmetic on DistributedShares
 
 zero(x::DistributedShares) = DistributedShares(x.idxs, x.vals*0)
 zero(x::Type{DistributedShares{T,S,R}}) where {T,S,R} = DistributedShares(1:0, T[])
@@ -183,7 +189,7 @@ end
 #Test
 using Polynomials
 let
-    SD = GF{982451653}
+    SD = GF{BigInt,982451653}
     #Number of interpolating points
     n = 11
     #Degree
@@ -263,7 +269,7 @@ inv(a::DistributedShares) = DistributedShares(a.idxs, inv.(a.vals))
 using .Test
 
 let
-    SD = GF{982451653}
+    SD = GF{BigInt,982451653}
     secret1 = 12345
     secret2 = 54321
 
@@ -282,7 +288,7 @@ let
 end
 
 let
-    SD = GF{982451653}
+    SD = GF{BigInt,982451653}
     n = 4
     t = 6
     x = rand(SD, n, n)
@@ -297,7 +303,7 @@ let
 end
 
 let
-    SD = GF{982451653}
+    SD = GF{BigInt,982451653}
     n = 1
     t = 3
     x = rand(SD, n, n)

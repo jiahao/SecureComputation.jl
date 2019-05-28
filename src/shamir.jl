@@ -1,4 +1,4 @@
-##############################################################################
+############################################################################
 # Shamir's secret sharing scheme
 # An example of a linear secret sharing scheme
 ##############################################################################
@@ -30,6 +30,7 @@ end
 Evaluate the value of the Lagrange interpolating polynomial at 0
 """
 function lagrangeinterp0(nodes, vals)
+    @assert size(nodes) == size(vals)
     k = size(vals, 1)
     SD = eltype(vals)
     L = zero(SD)
@@ -87,7 +88,7 @@ using .GaloisFields, Test
 let
     #Example from
     #https://en.wikipedia.org/wiki/Shamir%27s_Secret_Sharing#Solution
-    F = GF{1613}
+    F = GF{BigInt,1613}
 
     secret = F(1234)
     idxs = 1:6
