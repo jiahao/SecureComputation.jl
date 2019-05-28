@@ -1,9 +1,13 @@
 module SecureComputation
 
+export shamir, unshamir, GF, RdRand, RdSeed
+
 using Random
 GLOBAL_RNG = Random.GLOBAL_RNG
 
 include("cpurng.jl")
+using .CPURNGs
+
 include("gf.jl")
 
 using .GaloisFields
@@ -13,10 +17,13 @@ include("shamir.jl")
 export GF, DistributedShares, shamir, unshamir
 
 # Arithmetic on distributed shares
+import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type, getindex
 
-import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type
+#Array operations on DistributedShares
 
-oneunit(::Type{GF{T}}) where T = GF{T}(1)
+getindex(x::DistributedShares, inds) = DistributedShares(inds, x.vals[inds])
+
+#Arihmetic on DistributedShares
 
 zero(x::DistributedShares) = DistributedShares(x.idxs, x.vals*0)
 zero(x::Type{DistributedShares{T,S,R}}) where {T,S,R} = DistributedShares(1:0, T[])

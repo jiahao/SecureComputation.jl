@@ -1,4 +1,4 @@
-##############################################################################
+############################################################################
 # Shamir's secret sharing scheme
 # An example of a linear secret sharing scheme
 ##############################################################################
@@ -30,6 +30,7 @@ end
 Evaluate the value of the Lagrange interpolating polynomial at 0
 """
 function lagrangeinterp0(nodes, vals)
+    @assert size(nodes) == size(vals)
     k = size(vals, 1)
     SD = eltype(vals)
     L = zero(SD)
@@ -80,3 +81,4 @@ shamir(rng::AbstractRNG, t::Int, n::Int, secret::SD) where SD <: SecretDomain =
     shamir(t, secret, rand(rng, SD, n-1))
 
 unshamir(x::DistributedShares) = lagrangeinterp0(x.idxs, x.vals)
+

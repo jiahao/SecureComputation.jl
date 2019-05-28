@@ -52,9 +52,9 @@ rand($($RNGType)(), T) -> v::T
 Return a value from the hardware random number generator.
 """
 function rand(::$RNGType, ::Random.SamplerType{T}) where {T <: Union{NativeBitsTypes...}}
-    while true
-        x, c, _ = $stepfnname(T)
-        if c==-1
+    for i=1:100
+        x, c = $stepfnname(T)
+        if c==0xffffffff
             return x
         end
     end
@@ -74,7 +74,7 @@ for T in NativeBitsTypes
             $"""%call = call { $t, i32, i64 } asm sideeffect "$rng \$0; sbb \$1,\$1; xor \$2, \$2;", "=r,=r,=r"()
             ret { $t, i32, i64 } %call"""),
         Tuple{$T, UInt32, Int64}, Tuple{})
-        return a, b
+        return $T(a), UInt32(b)
     end
     end #eval
 end
