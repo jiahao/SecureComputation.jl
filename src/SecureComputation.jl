@@ -21,12 +21,15 @@ import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type, getindex
 
 #Array operations on DistributedShares
 
-getindex(x::DistributedShares, inds) = DistributedShares(inds, x.vals[inds])
+getindex(x::DistributedShares{SD, N, D, U, V}, inds) where {SD, N, D, U, V} =
+    DistributedShares(inds, D, x.vals[inds])
 
-#Arihmetic on DistributedShares
+#Arithmetic on DistributedShares
 
-zero(x::DistributedShares) = DistributedShares(x.idxs, x.vals*0)
-zero(x::Type{DistributedShares{T,S,R}}) where {T,S,R} = DistributedShares(1:0, T[])
+#zero(x::DistributedShares{SD, N, D, U, V}) where {SD, N, D, U, V} =
+#    DistributedShares(x.idxs, D, x.vals*0)
+#zero(x::Type{DistributedShares{SD, N, D, U, V}}) where {SD, N, D, U, V} =
+#    DistributedShares(1:0, D, T[])
 
 eltype(::Type{S}) where S <: DistributedShares = S.parameters[1]
 
@@ -55,7 +58,7 @@ isalignedindexes(a::DistributedShares, b::DistributedShares) =
     +(a::T, b::T, Val(isalignedindexes(a, b)))
 
 #Addition when indexes are aligned
-+(a::T, b::T, ::Val{true}) where T <: DistributedShares = DistributedShares(a.idxs, a.vals + b.vals)
++(a::T, b::T, ::Val{true}) where T <: DistributedShares = DistributedShares(a.idxs, T.parameters[3], a.vals + b.vals)
 
 function alignindexes(a::T, b::T) where T<:UnitRange
     UnitRange(min(a.start, b.start), max(a.stop, b.stop))
@@ -75,14 +78,14 @@ function +(a::T, b::T, ::Val{false}) where T <: DistributedShares
             vals[i] += b.vals[i]
         end
     end
-    DistributedShares(idxs, vals)
+    DistributedShares(idxs, T.parameters[3], vals)
 end
 
 ##############################################################################
 # Subtraction
 ##############################################################################
 
--(a::T) where T <: DistributedShares = DistributedShares(a.idxs, -a.vals)
+-(a::T) where T <: DistributedShares = DistributedShares(a.idxs, T.parameters[3], -a.vals)
 -(a::T, b::T) where T <: DistributedShares = a + (-b)
 
 ##############################################################################
@@ -166,7 +169,7 @@ function dvand!(alpha, B)
 end
 
 #Add n random polynomials of degree t
-function randomize!(x::DistributedShares, t::Int)
+function randomize!(x::T, t::Int) where T<:DistributedShares
     vals = x.vals
     SD = eltype(x)
     n = length(vals)
@@ -174,7 +177,7 @@ function randomize!(x::DistributedShares, t::Int)
         q = shamir(n, t, SD(0))
         vals += q.vals
     end
-    DistributedShares(x.idxs, vals)
+    DistributedShares(x.idxs, T.parameters[3], vals)
 end
 
 #NOTE: Notation is transposed relative to the BGW88 paper,
@@ -199,10 +202,7 @@ function *(a::T, b::T, ::Val{false}) where T <: DistributedShares
     S = eltype(T)
     idxs = alignindexes(a.idxs, b.idxs)
     n = length(idxs)
-    #XXX HARD CODED ASSUMPTION
-    # SHOULD PUT T IN TYPE PARAMETER
-    # n = 2t + 1
-    t = (n - 1) ÷ 2
+    t = T.parameters[3]
 
     vals = zeros(S, n)
     for i in (a.idxs) ∩ (b.idxs)
@@ -211,7 +211,7 @@ function *(a::T, b::T, ::Val{false}) where T <: DistributedShares
 
     #Degree reduction
     R = reducedegree(vals, SD.(idxs), t)
-    h = DistributedShares(idxs, R)
+    h = DistributedShares(idxs, t, R)
 
     #Randomization
     randomize!(h, t)
@@ -221,16 +221,12 @@ function *(a::T, b::T, ::Val{true}) where T <: DistributedShares
     n = length(a.vals)
     idxs = a.idxs
 
-    #XXX HARD CODED ASSUMPTION
-    # SHOULD PUT T IN TYPE PARAMETER
-    # n = 2t + 1
-    t = (n - 1) ÷ 2
-
     SD = eltype(T) #get SecretDomain
+    t = T.parameters[3]
 
     #Degree reduction
     R = reducedegree(a.vals.*b.vals, SD.(idxs), t)
-    h = DistributedShares(idxs, R)
+    h = DistributedShares(idxs, t, R)
 
     #Randomization
     randomize!(h, t)
@@ -240,7 +236,7 @@ end
 # Inversion
 ##############################################################################
 
-inv(a::DistributedShares) = DistributedShares(a.idxs, inv.(a.vals))
+inv(a::T) where T<:DistributedShares = DistributedShares(a.idxs, T.parameters[3], inv.(a.vals))
 
 ##############################################################################
 # Division

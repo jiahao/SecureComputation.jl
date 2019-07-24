@@ -3,10 +3,24 @@
 # An example of a linear secret sharing scheme
 ##############################################################################
 
-struct DistributedShares{SD<:SecretDomain, U<:AbstractVector{Int}, V<:AbstractVector{SD}}
+import Base: one, oneunit, zero
+
+# N is the number of distributed shares
+# D is the degree of shares (how many we need to reconstruct the secret)
+struct DistributedShares{SD<:SecretDomain, N, D, U<:AbstractVector{Int}, V<:AbstractVector{SD}}
     idxs::U
     vals::V
 end
+
+DistributedShares(idxs, deg, vals::AbstractVector{SD}) where SD =
+    DistributedShares{eltype(vals), length(idxs), deg, typeof(idxs), typeof(vals)}(idxs, vals)
+
+
+for func in (:one, :oneunit, :zero) @eval begin
+    $func(::Type{DistributedShares{SD, N, D, U, V}}) where {SD, N, D, U, V} =
+        shamir(N, D, $func(SD))
+    $func(x::DistributedShares)=$func(typeof(x))
+end end
 
 """
 Evaluate a polynomial
@@ -66,7 +80,7 @@ function shamir(t::Int, s::SD, rs) where SD <: SecretDomain
         f = evalpoly(j, s, rs)
         vals[j] = f
     end
-    DistributedShares(1:t, vals)
+    DistributedShares(1:t, length(rs)+1, vals)
 end
 
 #Default degree of sharing is the maximal degree which permits multiplication

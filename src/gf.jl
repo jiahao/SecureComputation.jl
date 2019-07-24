@@ -7,7 +7,7 @@ module GaloisFields
 
 export SecretDomain, FiniteField, GF
 using Random
-import Base: ==, +, -, *, /, \, oneunit, inv, promote_rule, rand, convert
+import Base: ==, +, -, *, /, \, <, >, ≤, ≥, abs, oneunit, inv, promote_rule, rand, convert
 
 abstract type SecretDomain <: Number end
 abstract type FiniteField <: SecretDomain end
@@ -46,5 +46,19 @@ promote_rule(::Type{GF{S,q}}, ::Type{GF{T,q}}) where {q, S, T} = GF{promote_type
 
 Random.rand(rng::AbstractRNG, ::Random.SamplerType{GF{T,q}}) where {T,q} =
     GF(T, q, rand(rng, 0:q-1))
+
+
+# Comparison operations
+# Strictly speaking, these operations do not follow from the axioms of finite fields;
+# however, they work if we consider the mathematical structure of a valued field
+# where the "trivial" thing should work
+# Ref: https://math.stackexchange.com/questions/2151779/normed-vector-spaces-over-finite-fields
+
+# This is actually a valuation
+abs(a::GF) = a.val
+
+for op in (:(<), :(>), :≤, :≥)
+    @eval $op(a::GF{T,q}, b::GF{T,q}) where {T,q} = $op(a.val, b.val)
+end
 
 end #module

@@ -19,9 +19,11 @@ unshamir(x) # == secret
 
 #With 2 random coefficients, you only need 2+1 = 3 pieces to reconstruct the secret
 unshamir(x[1:3]) # == secret
+```
 
-# A more realistic example using the Intel hardware CSPRNG
+A more realistic example using the Intel hardware CSPRNG
 
+```
 F = GF{BigInt,1000000004191}
 secret = F(1234567890)
 x = shamir(RdRand(), 100, 39, secret)
@@ -30,3 +32,15 @@ unshamir(x) # == secret
 #If I have just 39 pieces, I can also reconstruct the number
 unshamir(x[1:39])  # == secret
 ```
+
+An example showing a simple matrix computation
+
+```
+using LinearAlgebra, SecureComputation
+F = GF{BigInt,1000000004191}
+M = rand(RdRand(), F, 3, 3)
+MM = shamir.(100, M)
+Z=lu(MM)
+istril(unshamir.(Z.L)) #true
+```
+
