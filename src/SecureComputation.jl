@@ -17,7 +17,7 @@ include("shamir.jl")
 export GF, DistributedShares, shamir, unshamir
 
 # Arithmetic on distributed shares
-import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type, getindex
+import Base: +, -, *, /, \, inv, eltype, zero, oneunit, promote_type, getindex,     convert
 
 #Array operations on DistributedShares
 
@@ -43,6 +43,9 @@ end
 "Are indexes of shares aligned?"
 isalignedindexes(a::DistributedShares, b::DistributedShares) =
     a.idxs == b.idxs
+
+# Pretty printing stuff
+convert(::Type{T}, x::GF) where {T<:Integer} = convert(T, x.val)
 
 ##############################################################################
 # ARITHMETIC ACCORDING TO THE BGW88 PROTOCOL
